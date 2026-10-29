@@ -55,7 +55,7 @@ export function removeStopFailureHook(configDir: string, command: string): boole
   return true;
 }
 
-/** Removes every Agent Shift hook, whichever profile or extension version installed it. */
+/** Removes every AgentShift hook, whichever profile or extension version installed it. */
 export function removeAgentShiftHooks(configDir: string): boolean {
   const file = join(configDir, 'settings.json');
   const settings = readSettings(file);

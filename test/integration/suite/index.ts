@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 
 export async function run(): Promise<void> {
   const extension = vscode.extensions.getExtension('pawaretdev.agent-shift');
-  assert.ok(extension, 'Agent Shift extension is installed in the test host');
+  assert.ok(extension, 'AgentShift extension is installed in the test host');
   await extension.activate();
   assert.equal(extension.isActive, true);
   const commands = await vscode.commands.getCommands(true);

@@ -122,7 +122,7 @@ export class CommandController {
 
   private assertTrusted(): boolean {
     if (vscode.workspace.isTrusted) return true;
-    void vscode.window.showWarningMessage('Agent Shift is read-only in untrusted workspaces.');
+    void vscode.window.showWarningMessage('AgentShift is read-only in untrusted workspaces.');
     return false;
   }
 
@@ -148,7 +148,7 @@ export class CommandController {
     this.profiles = this.store.list();
     if (dataSharing() === 'shared') shareProfileData(profile.dir, defaultConfigDir());
     else installStopFailureHook(profile.dir, this.hookFor(profile.dir));
-    const terminal = vscode.window.createTerminal({ name: `Agent Shift: ${profile.label}`, env: { CLAUDE_CONFIG_DIR: profile.dir } });
+    const terminal = vscode.window.createTerminal({ name: `AgentShift: ${profile.label}`, env: { CLAUDE_CONFIG_DIR: profile.dir } });
     terminal.sendText(['claude', 'auth', 'login', ...loginArgs].join(' '));
     terminal.show();
     const disposable = vscode.window.onDidCloseTerminal(async (closed) => {
@@ -228,7 +228,7 @@ export class CommandController {
     const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     if (!cwd) { void vscode.window.showInformationMessage('Open a workspace folder to browse conversations.'); return; }
     if (!this.context.globalState.get<boolean>('historyDisclosureAccepted')) {
-      const accepted = await vscode.window.showWarningMessage('Conversation transcripts may contain secrets and source code. Agent Shift reads only names and modification times until you select one to copy.', { modal: true }, 'Continue');
+      const accepted = await vscode.window.showWarningMessage('Conversation transcripts may contain secrets and source code. AgentShift reads only names and modification times until you select one to copy.', { modal: true }, 'Continue');
       if (accepted !== 'Continue') return;
       await this.context.globalState.update('historyDisclosureAccepted', true);
     }
@@ -247,7 +247,7 @@ export class CommandController {
     try {
       const { copied } = copyHistorySession(picked.session.file, targetDir, cwd);
       // UNDOCUMENTED: Claude is expected to discover a transcript copied into the active encoded project directory by session id.
-      const terminal = vscode.window.createTerminal({ name: 'Agent Shift: Resume', env: this.activeId === DEFAULT_PROFILE_ID ? { CLAUDE_CONFIG_DIR: null } : { CLAUDE_CONFIG_DIR: targetDir } });
+      const terminal = vscode.window.createTerminal({ name: 'AgentShift: Resume', env: this.activeId === DEFAULT_PROFILE_ID ? { CLAUDE_CONFIG_DIR: null } : { CLAUDE_CONFIG_DIR: targetDir } });
       terminal.sendText(`claude --resume ${picked.session.id}${copied ? ' --fork-session' : ''}`);
       terminal.show();
     } catch (error) { void vscode.window.showErrorMessage(error instanceof Error ? error.message : String(error)); }

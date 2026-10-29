@@ -15,4 +15,3 @@ dist/integration/**
 .vscode-test/**
 CLAUDE.md
 *.local.md
-images/**

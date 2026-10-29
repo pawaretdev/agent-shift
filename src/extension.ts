@@ -47,7 +47,7 @@ async function offerDefaultHook(context: vscode.ExtensionContext): Promise<void>
   if (!vscode.workspace.isTrusted || context.globalState.get<boolean>('defaultHookDecisionMade')) return;
   await context.globalState.update('defaultHookDecisionMade', true);
   const choice = await vscode.window.showInformationMessage(
-    'Allow Agent Shift to install its usage-limit hook in the Default Claude profile?',
+    'Allow AgentShift to install its usage-limit hook in the Default Claude profile?',
     'Install hook',
     'Not now',
   );

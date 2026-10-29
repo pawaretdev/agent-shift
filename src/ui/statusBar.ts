@@ -6,7 +6,7 @@ export class ProfileStatusBar implements vscode.Disposable {
 
   constructor() {
     this.item.command = 'agentShift.switch';
-    this.item.name = 'Agent Shift';
+    this.item.name = 'AgentShift';
   }
 
   update(profile: Profile | undefined, pendingReload = false, style: string = 'name'): void {
@@ -20,7 +20,7 @@ export class ProfileStatusBar implements vscode.Disposable {
   }
 
   private tooltip(label: string, identity?: ProfileIdentity, pendingReload = false): vscode.MarkdownString {
-    const lines = [`**Agent Shift: ${label}**`];
+    const lines = [`**AgentShift: ${label}**`];
     if (identity?.email) lines.push(identity.email);
     if (identity?.orgName) lines.push(`Organization: ${identity.orgName}`);
     if (identity?.subscriptionType) lines.push(`Plan: ${identity.subscriptionType}`);

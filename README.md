@@ -1,6 +1,6 @@
-# Agent Shift: Claude Code Profiles
+# AgentShift: Claude Code Profiles
 
-Agent Shift is a small Cursor extension for switching between isolated Claude Code accounts and organizations. Each managed profile receives its own `CLAUDE_CONFIG_DIR`, so Claude settings, project data, transcripts, and authentication context remain separate.
+AgentShift is a small Cursor extension for switching between isolated Claude Code accounts and organizations. Each managed profile receives its own `CLAUDE_CONFIG_DIR`, so Claude settings, project data, transcripts, and authentication context remain separate.
 
 ## Features
 
@@ -8,7 +8,7 @@ Agent Shift is a small Cursor extension for switching between isolated Claude Co
 - Create a profile and launch the documented `claude auth login` flow.
 - Keep a per-workspace default, with optional ordered path rules.
 - Toggle back to the previous profile with `Cmd+Alt+[` on macOS or `Ctrl+Alt+[` elsewhere.
-- Optionally share conversations, settings, skills, and plugins across every profile while logins stay separate (**Agent Shift: Profile Data Sharing**).
+- Optionally share conversations, settings, skills, and plugins across every profile while logins stay separate (**AgentShift: Profile Data Sharing**).
 - Browse transcript names and modification times across profiles, then copy one conversation into the active profile and resume it as a fork.
 - Detect documented session and weekly limit messages through a profile-local StopFailure hook and suggest another signed-in profile.
 - No telemetry, network requests, runtime dependencies, or direct credential-store access.
@@ -16,11 +16,11 @@ Agent Shift is a small Cursor extension for switching between isolated Claude Co
 ## Setup
 
 1. Install Claude Code and sign in to the Default profile if desired.
-2. Install Agent Shift.
-3. Run **Agent Shift: Add Profile**, choose a name and login method, then complete Claude's login in the integrated terminal.
-4. Select the status bar item to switch profiles. Choose **Restart** when prompted: Agent Shift restarts the extension host (not the whole window) so an already-running Claude Code panel adopts the selected environment. Switching back to the profile the window started with needs no restart.
+2. Install AgentShift.
+3. Run **AgentShift: Add Profile**, choose a name and login method, then complete Claude's login in the integrated terminal.
+4. Select the status bar item to switch profiles. Choose **Restart** when prompted: AgentShift restarts the extension host (not the whole window) so an already-running Claude Code panel adopts the selected environment. Switching back to the profile the window started with needs no restart.
 
-Managed profiles default to `~/.agent-shift/profiles`; metadata is stored in `~/.agent-shift/profiles.json`. The Default profile remains `~/.claude` and is never deleted by Agent Shift.
+Managed profiles default to `~/.agent-shift/profiles`; metadata is stored in `~/.agent-shift/profiles.json`. The Default profile remains `~/.claude` and is never deleted by AgentShift.
 
 ## Settings
 
@@ -31,7 +31,7 @@ Managed profiles default to `~/.agent-shift/profiles`; metadata is stored in `~/
 - `agentShift.statusBarStyle`: `name`, `compact`, or `hidden`.
 - `agentShift.dataSharing`: `isolated` (default) or `shared`. Shared links each profile's `projects`, `todos`, `file-history`, `plans`, `shell-snapshots`, `history.jsonl`, `settings.json`, `CLAUDE.md`, `keybindings.json`, `agents`, `commands`, `skills`, `hooks`, `output-styles`, and `plugins` to `~/.claude`. Existing profile data is merged in first; anything that clashes is kept in the profile's `.agent-shift-backup` folder. Turning sharing off copies configuration back and leaves conversations in `~/.claude`.
 
-Agent Shift activates on `*` because it must synchronously set the selected profile environment before the Claude Code extension starts. Command-only activation can run too late and could let the Claude panel start with a different account.
+AgentShift activates on `*` because it must synchronously set the selected profile environment before the Claude Code extension starts. Command-only activation can run too late and could let the Claude panel start with a different account.
 
 ## Limitations
 
@@ -63,7 +63,7 @@ Tests use temporary directories, fake homes, and fake Claude executables. They n
 
 ## Trademark
 
-Claude and Anthropic are trademarks of Anthropic PBC. Agent Shift is an independent project and is not affiliated with, endorsed by, or sponsored by Anthropic.
+Claude and Anthropic are trademarks of Anthropic PBC. AgentShift is an independent project and is not affiliated with, endorsed by, or sponsored by Anthropic.
 
 ## License
 

@@ -38,7 +38,7 @@ export async function warnOnClaudeEnvironmentConflict(): Promise<void> {
   const next = withoutConfigDir(setting?.globalValue);
   if (!next) return;
   const choice = await vscode.window.showWarningMessage(
-    'A user-level CLAUDE_CONFIG_DIR entry in claudeCode.environmentVariables overrides Agent Shift.',
+    'A user-level CLAUDE_CONFIG_DIR entry in claudeCode.environmentVariables overrides AgentShift.',
     'Remove this entry',
   );
   if (choice !== 'Remove this entry') return;

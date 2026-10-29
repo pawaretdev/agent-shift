@@ -1,6 +1,6 @@
-# Agent Shift Functional Specification
+# AgentShift Functional Specification
 
-Agent Shift is a Cursor extension for managing separate Claude Code accounts and organizations as isolated `CLAUDE_CONFIG_DIR` profiles. The extension makes no network calls and collects no telemetry.
+AgentShift is a Cursor extension for managing separate Claude Code accounts and organizations as isolated `CLAUDE_CONFIG_DIR` profiles. The extension makes no network calls and collects no telemetry.
 
 ## Functional requirements
 
@@ -21,11 +21,11 @@ Agent Shift is a Cursor extension for managing separate Claude Code accounts and
 
 ## Scope and behavior
 
-- Profiles created by Agent Shift are stored below `~/.agent-shift/profiles` by default. Metadata is stored in `~/.agent-shift/profiles.json`.
-- Profiles are fully isolated. Agent Shift does not link or share `CLAUDE.md`, agents, skills, plugins, settings, transcripts, or credentials between profiles.
+- Profiles created by AgentShift are stored below `~/.agent-shift/profiles` by default. Metadata is stored in `~/.agent-shift/profiles.json`.
+- Profiles are fully isolated. AgentShift does not link or share `CLAUDE.md`, agents, skills, plugins, settings, transcripts, or credentials between profiles.
 - Multiple windows may use the same profile.
 - In multi-root workspaces, the first workspace folder determines rule matching and history scope.
-- In untrusted workspaces, Agent Shift is read-only: users can inspect profile state, but profile, hook, transcript, and configuration mutations are disabled.
+- In untrusted workspaces, AgentShift is read-only: users can inspect profile state, but profile, hook, transcript, and configuration mutations are disabled.
 - Remote SSH, WSL, development containers, and Cursor are best-effort compatibility targets.
 - Console/API-billing authentication may use global state outside `CLAUDE_CONFIG_DIR`; the UI warns that it may not be isolated.
 

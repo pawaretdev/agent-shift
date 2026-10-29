@@ -1,4 +1,4 @@
-# Agent Shift
+# AgentShift
 
 Cursor/VS Code extension that switches Claude Code accounts by giving each profile its own `CLAUDE_CONFIG_DIR`. Published to Open VSX as `pawaretdev.agent-shift`. No runtime dependencies, no network, no telemetry.
 
@@ -10,7 +10,7 @@ npm test             # vitest unit tests (test/unit)
 npm run typecheck    # tsc --noEmit, covers src and test
 npm run test:integration   # VS Code test host; needs a display (CI uses xvfb)
 npm run package      # build + .vsix
-code --install-extension agent-shift-0.1.0.vsix --force   # `code` on this machine is Cursor
+code --install-extension agent-shift-<version>.vsix --force   # `code` on this machine is Cursor
 ```
 
 ## Layout

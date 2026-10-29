@@ -1,6 +1,11 @@
 # Changelog
 
-All notable changes to Agent Shift are documented here.
+All notable changes to AgentShift are documented here.
+
+## 0.1.3 - 2026-10-29
+
+- Rename the display name to AgentShift so it is easier to find; the extension ID `pawaretdev.agent-shift` and `agentShift.*` settings are unchanged.
+- Add search keywords.
 
 ## 0.1.2 - 2026-10-29
 
