@@ -2,7 +2,7 @@
 
 All notable changes to Agent Shift are documented here.
 
-## Unreleased
+## 0.1.1 - 2026-10-29
 
 - Switching profile restarts only the extension host instead of reloading the window; the data-sharing prompt does the same.
 - Switching back to the profile the window started with clears **pending reload** and no longer prompts for a restart.
