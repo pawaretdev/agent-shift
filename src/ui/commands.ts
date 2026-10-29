@@ -1,13 +1,12 @@
 import * as vscode from 'vscode';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { ProfileStore, type Profile } from '../core/profiles';
 import { DEFAULT_PROFILE_ID, defaultConfigDir } from '../core/paths';
 import { copyHistorySession, listHistory, uniqueSessions } from '../core/history';
-import { shareProfileData, unshareProfileData, type DataSharing } from '../core/sharing';
+import { shareProfileData, unshareProfileData, withLock, type DataSharing } from '../core/sharing';
 import { authStatus, logout } from '../claude/cli';
 import { applyProcessEnvironment, updateTerminalEnvironment } from '../claude/envInjector';
-import { hookCommand, installStopFailureHook, removeAgentShiftHooks } from '../claude/hookInstaller';
+import { hookCommand, installStopFailureHook, removeAgentShiftHooks, replaceStaleHooks } from '../claude/hookInstaller';
 import { pickProfile } from './picker';
 import type { ProfileStatusBar } from './statusBar';
 import type { Log } from '../log';
@@ -15,7 +14,7 @@ import type { Log } from '../log';
 export class CommandController {
   private profiles: Profile[];
   private activeId: string;
-  private pendingReload: boolean;
+  private pendingReload = false;
   /** The profile this window's Claude Code process was started with; only a reload changes it. */
   private readonly loadedId: string;
 
@@ -23,14 +22,12 @@ export class CommandController {
     private readonly context: vscode.ExtensionContext,
     private readonly store: ProfileStore,
     initialId: string,
-    pendingReload: boolean,
     private readonly status: ProfileStatusBar,
     private readonly log: Log,
   ) {
     this.profiles = store.list();
     this.activeId = initialId;
     this.loadedId = initialId;
-    this.pendingReload = pendingReload;
     this.render();
   }
 
@@ -64,28 +61,47 @@ export class CommandController {
     const sharedDir = defaultConfigDir();
     const mode = dataSharing();
     if (mode === 'isolated' && !transition) return;
-    for (const profile of this.profiles) {
-      try {
-        if (mode === 'shared') {
-          const result = shareProfileData(profile.dir, sharedDir);
-          if (result.skipped.length) this.log.info(`${profile.id}: left existing links alone: ${result.skipped.join(', ')}`);
-          if (result.backupDir) this.log.info(`${profile.id}: entries that clashed with ~/.claude were kept in ${result.backupDir}`);
-        } else {
-          unshareProfileData(profile.dir, sharedDir);
-          removeAgentShiftHooks(profile.dir);
-          installStopFailureHook(profile.dir, this.hookFor(profile.dir));
-        }
-      } catch (error) { this.log.error(error); }
-    }
-    if (mode === 'shared' && transition) {
-      // One hook in the shared settings.json reports whichever profile ran it, via CLAUDE_CONFIG_DIR.
-      removeAgentShiftHooks(sharedDir);
-      installStopFailureHook(sharedDir, this.hookFor(sharedDir));
-    }
+    withLock(this.lockDir(), () => {
+      for (const profile of this.profiles) {
+        try {
+          if (mode === 'shared') {
+            const result = shareProfileData(profile.dir, sharedDir);
+            if (result.skipped.length) this.log.info(`${profile.id}: left existing links alone: ${result.skipped.join(', ')}`);
+            if (result.backupDir) this.log.info(`${profile.id}: entries that clashed with ~/.claude were kept in ${result.backupDir}`);
+          } else {
+            unshareProfileData(profile.dir, sharedDir);
+            removeAgentShiftHooks(profile.dir);
+            installStopFailureHook(profile.dir, this.hookFor(profile.dir));
+          }
+        } catch (error) { this.log.error(error); }
+      }
+      if (mode === 'shared' && transition) {
+        // One hook in the shared settings.json reports whichever profile ran it, via CLAUDE_CONFIG_DIR.
+        removeAgentShiftHooks(sharedDir);
+        installStopFailureHook(sharedDir, this.hookFor(sharedDir));
+      }
+    });
   }
 
-  private hookFor(profileDir: string): string {
-    const script = join(this.context.extensionPath, 'dist', 'hook', 'stop-failure.js');
+  /** Replaces hooks that older extension versions left behind. */
+  repairHooks(): void {
+    if (!vscode.workspace.isTrusted) return;
+    const signalDir = join(this.context.globalStorageUri.fsPath, 'signals');
+    // Shared profiles' settings.json links to ~/.claude, so only isolated profiles get their own repair.
+    const dirs = [defaultConfigDir(), ...(dataSharing() === 'isolated' ? this.profiles.map((profile) => profile.dir) : [])];
+    withLock(this.lockDir(), () => {
+      for (const dir of dirs) {
+        try { replaceStaleHooks(dir, this.hookFor(dir), signalDir); } catch (error) { this.log.error(error); }
+      }
+    });
+  }
+
+  private lockDir(): string {
+    return join(dirname(this.store.file), 'sharing.lock');
+  }
+
+  hookFor(profileDir: string): string {
+    const script = join(this.context.globalStorageUri.fsPath, 'stop-failure.js');
     return hookCommand(script, join(this.context.globalStorageUri.fsPath, 'signals'), profileDir);
   }
 
@@ -105,10 +121,10 @@ export class CommandController {
     if (!this.pendingReload) return;
     const behavior = vscode.workspace.getConfiguration('agentShift').get<'ask' | 'always' | 'never'>('reloadBehavior', 'ask');
     // UNDOCUMENTED: restarting only the extension host is assumed enough for the Claude Code panel to relaunch with the new CLAUDE_CONFIG_DIR.
-    if (behavior === 'always') await vscode.commands.executeCommand('workbench.action.restartExtensionHost');
+    if (behavior === 'always') restartExtensionHost();
     if (behavior === 'ask') {
       const choice = await vscode.window.showInformationMessage('Restart extensions so Claude Code uses the selected profile.', 'Restart');
-      if (choice === 'Restart') await vscode.commands.executeCommand('workbench.action.restartExtensionHost');
+      if (choice === 'Restart') restartExtensionHost();
     }
   }
 
@@ -151,6 +167,8 @@ export class CommandController {
     const terminal = vscode.window.createTerminal({ name: `AgentShift: ${profile.label}`, env: { CLAUDE_CONFIG_DIR: profile.dir } });
     terminal.sendText(['claude', 'auth', 'login', ...loginArgs].join(' '));
     terminal.show();
+    // The shell outlives the login, so the switch waits for the user to close the terminal.
+    void vscode.window.showInformationMessage(`Sign in, then close the terminal to switch to ${profile.label}.`);
     const disposable = vscode.window.onDidCloseTerminal(async (closed) => {
       if (closed !== terminal) return;
       disposable.dispose();
@@ -167,9 +185,9 @@ export class CommandController {
         this.store.updateIdentity(profile.id, identity);
         this.profiles = this.store.list();
         this.render();
+        await this.switchTo(profile.id);
       } catch (error) { this.log.error(error); }
     });
-    await this.switchTo(profile.id);
   }
 
   private async manageProfiles(): Promise<void> {
@@ -216,7 +234,7 @@ export class CommandController {
     // The configuration listener applies the change.
     await vscode.workspace.getConfiguration('agentShift').update('dataSharing', picked.mode, vscode.ConfigurationTarget.Global);
     const choice = await vscode.window.showInformationMessage('Restart extensions so Claude Code picks up the shared data.', 'Restart');
-    if (choice === 'Restart') await vscode.commands.executeCommand('workbench.action.restartExtensionHost');
+    if (choice === 'Restart') restartExtensionHost();
   }
 
   private async switchToPrevious(): Promise<void> {
@@ -256,6 +274,11 @@ export class CommandController {
   private render(): void {
     this.status.update(this.profiles.find((profile) => profile.id === this.activeId), this.pendingReload, vscode.workspace.getConfiguration('agentShift').get('statusBarStyle', 'name'));
   }
+}
+
+/** Restarts after the running command returns; a restart while it is still running is reported as "Canceled". */
+function restartExtensionHost(): void {
+  setTimeout(() => void vscode.commands.executeCommand('workbench.action.restartExtensionHost'), 0);
 }
 
 function dataSharing(): DataSharing {

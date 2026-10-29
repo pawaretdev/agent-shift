@@ -1,4 +1,4 @@
-import { appendFileSync, cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, readlinkSync, renameSync, rmdirSync, symlinkSync, unlinkSync, type Stats } from 'node:fs';
+import { appendFileSync, cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, readlinkSync, renameSync, rmdirSync, statSync, symlinkSync, unlinkSync, type Stats } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
 export type DataSharing = 'isolated' | 'shared';
@@ -25,7 +25,7 @@ export const SHARED_ENTRIES: readonly SharedEntry[] = [
   { name: 'plugins', kind: 'dir', history: false },
 ];
 
-export interface ShareResult { linked: string[]; skipped: string[]; backupDir?: string }
+export interface ShareResult { skipped: string[]; backupDir?: string }
 
 function lstatOrUndefined(path: string): Stats | undefined {
   try { return lstatSync(path); } catch { return undefined; }
@@ -61,7 +61,7 @@ function mergeDirectory(source: string, target: string, backup: string): void {
  * back into regular files are merged again.
  */
 export function shareProfileData(profileDir: string, sharedDir: string, now = Date.now()): ShareResult {
-  const result: ShareResult = { linked: [], skipped: [] };
+  const result: ShareResult = { skipped: [] };
   const backupRoot = join(profileDir, '.agent-shift-backup', String(now));
   mkdirSync(sharedDir, { recursive: true });
   for (const entry of SHARED_ENTRIES) {
@@ -87,7 +87,6 @@ export function shareProfileData(profileDir: string, sharedDir: string, now = Da
     }
     if (entry.kind === 'dir') mkdirSync(shared, { recursive: true });
     symlinkSync(shared, local, entry.kind === 'dir' ? 'junction' : 'file');
-    result.linked.push(entry.name);
   }
   return result;
 }
@@ -96,21 +95,36 @@ export function shareProfileData(profileDir: string, sharedDir: string, now = Da
  * Removes the profile's links into sharedDir. Configuration entries are copied back so the profile keeps
  * working; history stays in sharedDir, where Browse Conversations can still reach it.
  */
-export function unshareProfileData(profileDir: string, sharedDir: string): string[] {
-  const restored: string[] = [];
+export function unshareProfileData(profileDir: string, sharedDir: string): void {
   for (const entry of SHARED_ENTRIES) {
     const local = join(profileDir, entry.name);
     const shared = join(sharedDir, entry.name);
     if (!lstatOrUndefined(local)?.isSymbolicLink() || !linksTo(local, shared)) continue;
     unlinkSync(local);
     if (!entry.history && existsSync(shared)) cpSync(shared, local, { recursive: true });
-    restored.push(entry.name);
   }
-  return restored;
 }
 
 /** Resolves a symlinked file to the path that should actually be written, so atomic renames keep the link. */
 export function writeTarget(file: string): string {
   const stat = lstatOrUndefined(file);
   return stat?.isSymbolicLink() ? resolve(dirname(file), readlinkSync(file)) : file;
+}
+
+/** Runs fn while holding a lock directory shared by all windows; returns false without running it when another window holds a fresh lock. */
+export function withLock(lockDir: string, fn: () => void, staleMs = 5 * 60_000): boolean {
+  mkdirSync(dirname(lockDir), { recursive: true });
+  try {
+    mkdirSync(lockDir);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+    // A lock released between mkdir and stat means another window just finished the same work.
+    const lock = statSync(lockDir, { throwIfNoEntry: false });
+    if (!lock || Date.now() - lock.mtimeMs < staleMs) return false;
+    // shortcut: two windows taking over the same stale lock can both run; only after a crash left a lock behind.
+    rmdirSync(lockDir);
+    mkdirSync(lockDir);
+  }
+  try { fn(); } finally { rmdirSync(lockDir); }
+  return true;
 }

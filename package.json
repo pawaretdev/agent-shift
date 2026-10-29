@@ -87,6 +87,7 @@
       "properties": {
         "agentShift.profileRoot": {
           "type": "string",
+          "scope": "machine",
           "default": "~/.agent-shift/profiles",
           "description": "Directory containing managed Claude Code profiles."
         },
@@ -102,6 +103,7 @@
         },
         "agentShift.rules": {
           "type": "array",
+          "scope": "machine",
           "default": [],
           "items": {
             "type": "object",
@@ -166,6 +168,7 @@
     "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^3.2.1",
     "esbuild": "^0.24.2",
+    "ovsx": "^1.3.0",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
   }

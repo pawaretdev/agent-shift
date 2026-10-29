@@ -13,6 +13,8 @@ process.stdin.on('data', (chunk) => { if (input.length < 65536) input += chunk; 
 process.stdin.on('end', () => {
   try {
     const value = JSON.parse(input);
+    // UNDOCUMENTED: subscription caps are assumed to reach StopFailure as error "rate_limit".
+    if (value.error !== 'rate_limit') return;
     const scrub = (text) => String(text ?? '').slice(0, 1000)
       .replace(/sk-ant-[A-Za-z0-9_-]+/g, '[REDACTED]')
       .replace(/Bearer\s+[A-Za-z0-9._~+/-]+=*/gi, '[REDACTED]')
