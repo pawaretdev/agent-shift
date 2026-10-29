@@ -1,0 +1,17 @@
+.github/**
+.vscode/**
+.claude/**
+.agents/**
+.gitignore
+src/**
+test/**
+node_modules/**
+*.ts
+*.mjs
+vitest.config.ts
+tsconfig.json
+*.vsix
+dist/integration/**
+.vscode-test/**
+CLAUDE.md
+*.local.md

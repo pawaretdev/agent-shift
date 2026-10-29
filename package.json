@@ -1,0 +1,168 @@
+{
+  "name": "agent-shift",
+  "displayName": "Agent Shift: Claude Code Profiles",
+  "description": "Switch isolated Claude Code profiles in Cursor.",
+  "version": "0.1.0",
+  "publisher": "pawaretdev",
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pawaretdev/agent-shift.git"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "claude",
+    "profiles",
+    "accounts",
+    "cursor"
+  ],
+  "extensionKind": [
+    "ui",
+    "workspace"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Profile state is read-only in untrusted workspaces."
+    }
+  },
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "agentShift.switch",
+        "title": "Agent Shift: Switch Profile"
+      },
+      {
+        "command": "agentShift.add",
+        "title": "Agent Shift: Add Profile"
+      },
+      {
+        "command": "agentShift.manage",
+        "title": "Agent Shift: Manage or Remove Profiles"
+      },
+      {
+        "command": "agentShift.setWorkspaceDefault",
+        "title": "Agent Shift: Set Workspace Default"
+      },
+      {
+        "command": "agentShift.clearWorkspaceDefault",
+        "title": "Agent Shift: Clear Workspace Default"
+      },
+      {
+        "command": "agentShift.switchToPrevious",
+        "title": "Agent Shift: Switch to Previous Profile"
+      },
+      {
+        "command": "agentShift.browseHistory",
+        "title": "Agent Shift: Browse Conversations"
+      },
+      {
+        "command": "agentShift.setDataSharing",
+        "title": "Agent Shift: Profile Data Sharing"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "agentShift.switchToPrevious",
+        "key": "ctrl+alt+[",
+        "mac": "cmd+alt+["
+      }
+    ],
+    "configuration": {
+      "title": "Agent Shift",
+      "properties": {
+        "agentShift.profileRoot": {
+          "type": "string",
+          "default": "~/.agent-shift/profiles",
+          "description": "Directory containing managed Claude Code profiles."
+        },
+        "agentShift.reloadBehavior": {
+          "type": "string",
+          "enum": [
+            "ask",
+            "always",
+            "never"
+          ],
+          "default": "ask",
+          "description": "Whether to reload the window after switching profiles."
+        },
+        "agentShift.rules": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "required": [
+              "glob",
+              "profile"
+            ],
+            "properties": {
+              "glob": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "string"
+              }
+            }
+          },
+          "description": "Ordered workspace-path rules used when no workspace default exists."
+        },
+        "agentShift.suggestSwitchOnLimit": {
+          "type": "boolean",
+          "default": true,
+          "description": "Suggest another profile after a usage limit."
+        },
+        "agentShift.statusBarStyle": {
+          "type": "string",
+          "enum": [
+            "name",
+            "compact",
+            "hidden"
+          ],
+          "default": "name",
+          "description": "Controls the Agent Shift status bar presentation."
+        },
+        "agentShift.dataSharing": {
+          "type": "string",
+          "enum": [
+            "isolated",
+            "shared"
+          ],
+          "enumDescriptions": [
+            "Each profile keeps its own conversations, settings, skills, and plugins.",
+            "All profiles link conversations, settings, skills, and plugins to ~/.claude. Logins stay separate."
+          ],
+          "default": "isolated",
+          "scope": "application",
+          "description": "Whether managed profiles share Claude Code data with the Default profile."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "test": "vitest run",
+    "test:integration": "npm run build && node ./test/integration/run.mjs",
+    "typecheck": "tsc --noEmit",
+    "package": "npm run build && vsce package --no-dependencies --allow-star-activation"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.2.1",
+    "esbuild": "^0.24.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}
