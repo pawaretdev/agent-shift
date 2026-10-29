@@ -38,4 +38,5 @@ code --install-extension agent-shift-<version>.vsix --force   # `code` on this m
 - Data sharing moves real user data; keep the merge-then-backup behavior in `src/core/sharing.ts` and never delete what clashes.
 - Unit tests that need `vscode` mock it with `vi.mock('vscode', ...)` (see `test/unit/commands.test.ts`).
 - Add a CHANGELOG entry under **Unreleased** for user-visible changes.
+- Commit messages follow Conventional Commits in English: `type(scope): subject`, imperative, lowercase, no trailing period. Release commits are `chore(release): x.y.z`. Pull requests are squash-merged with the PR title as the commit message.
 - Switching still needs a manual check in a real window: switch, restart, then confirm the account with `/status` in the Claude Code panel.

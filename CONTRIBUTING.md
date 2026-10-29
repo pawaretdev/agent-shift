@@ -51,7 +51,7 @@ These keep AgentShift safe to install. Pull requests that break them will not be
 
 - Keep each pull request to one change, with a short description of what and why.
 - Add a line under **Unreleased** in `CHANGELOG.md` for anything users will notice.
-- Write commit messages in English.
+- Title the pull request in [Conventional Commits](https://www.conventionalcommits.org/) form, in English: `type(scope): subject`, for example `fix(switch): keep pending reload after restart` or `docs: explain data sharing`. Types: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `ci`, `build`, `chore`. Pull requests are squash-merged, so the title becomes the commit on `main`; the commits inside your branch can be named however you like.
 - Update `README.md` when you add or change a command or setting.
 
 Releases are cut by the maintainer by pushing a version tag; contributors do not need to bump the version.
