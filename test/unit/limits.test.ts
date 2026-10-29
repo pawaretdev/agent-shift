@@ -13,6 +13,7 @@ describe('usage limit parsing', () => {
 
   it('ignores 85% warnings and non-rate-limit errors', () => {
     expect(parseLimitSignal({ error: 'rate_limit', last_assistant_message: "You've used 85% of your weekly limit" })).toBeUndefined();
+    expect(parseLimitSignal({ error: 'rate_limit', last_assistant_message: "You've hit your 85% weekly limit" })).toBeUndefined();
     expect(parseLimitSignal({ error: 'other', last_assistant_message: "You've hit your session limit · resets 3:45pm" })).toBeUndefined();
   });
 });

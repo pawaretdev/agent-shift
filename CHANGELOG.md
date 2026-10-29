@@ -2,6 +2,17 @@
 
 All notable changes to AgentShift are documented here.
 
+## Unreleased
+
+- Usage-limit hooks keep working after updates: the hook script lives in the extension's global storage, and hooks left by older versions are replaced on startup.
+- `agentShift.profileRoot` and `agentShift.rules` can no longer be set from workspace settings, so a repository cannot point Claude Code at its own configuration.
+- Limit warnings reach the right window when several are open, and now also appear for the Default profile.
+- Add Profile switches to the new profile only after the login succeeds and its terminal is closed.
+- Changing data sharing with several windows open applies the change once.
+- The Default-hook prompt offers "Don't ask again" and asks again if dismissed.
+- A conversation copy that fails part-way no longer blocks a retry.
+- Restarting extensions after a switch no longer shows a "Canceled" error.
+
 ## 0.1.4 - 2026-10-29
 
 - Publish to the VS Code Marketplace as well as Open VSX.

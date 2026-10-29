@@ -15,7 +15,6 @@ export interface ProfileIdentity {
 export interface Profile {
   id: string;
   label: string;
-  color?: string;
   dir: string;
   managed: true;
   identity?: ProfileIdentity;
@@ -48,7 +47,7 @@ export class ProfileStore {
     }
   }
 
-  create(label: string, color?: string): Profile {
+  create(label: string): Profile {
     const idBase = slugifyProfileId(label);
     const profiles = this.list();
     let id = idBase;
@@ -57,7 +56,7 @@ export class ProfileStore {
     const dir = containedProfilePath(this.root, id);
     mkdirSync(this.root, { recursive: true });
     mkdirSync(dir, { recursive: false });
-    const profile: Profile = { id, label, color, dir, managed: true };
+    const profile: Profile = { id, label, dir, managed: true };
     this.save([...profiles, profile]);
     return profile;
   }

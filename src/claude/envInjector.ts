@@ -3,7 +3,7 @@ import { expandHome, defaultProfileRoot } from '../core/paths';
 import { ProfileStore } from '../core/profiles';
 import { resolveProfileId, withoutConfigDir, type ProfileRule } from '../core/resolve';
 
-export interface BootstrapProfile { id: string; dir?: string }
+export interface BootstrapProfile { id: string; dir?: string; store: ProfileStore }
 
 export function applyProcessEnvironment(configDir?: string): void {
   // UNDOCUMENTED: Claude Code is expected to inherit CLAUDE_CONFIG_DIR from the shared extension-host process environment.
@@ -14,7 +14,8 @@ export function applyProcessEnvironment(configDir?: string): void {
 export function applyInitialEnvironment(context: vscode.ExtensionContext): BootstrapProfile {
   const configuration = vscode.workspace.getConfiguration('agentShift');
   const root = expandHome(configuration.get<string>('profileRoot') || defaultProfileRoot());
-  const profiles = new ProfileStore(root).list();
+  const store = new ProfileStore(root);
+  const profiles = store.list();
   const id = resolveProfileId({
     windowChoice: context.workspaceState.get<string>('activeProfile'),
     workspaceDefault: context.workspaceState.get<string>('workspaceDefault'),
@@ -24,7 +25,7 @@ export function applyInitialEnvironment(context: vscode.ExtensionContext): Boots
   });
   const dir = profiles.find((profile) => profile.id === id)?.dir;
   applyProcessEnvironment(dir);
-  return { id, dir };
+  return { id, dir, store };
 }
 
 export function updateTerminalEnvironment(collection: vscode.EnvironmentVariableCollection, configDir?: string): void {

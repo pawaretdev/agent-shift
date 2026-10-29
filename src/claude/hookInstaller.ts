@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { writeTarget } from '../core/sharing';
 
@@ -39,14 +39,14 @@ export function installStopFailureHook(configDir: string, command: string): bool
   return true;
 }
 
-export function removeStopFailureHook(configDir: string, command: string): boolean {
+function removeHooks(configDir: string, drop: (command: string) => boolean): boolean {
   const file = join(configDir, 'settings.json');
   const settings = readSettings(file);
   const groups = settings.hooks?.StopFailure;
   if (!Array.isArray(groups)) return false;
   let removed = false;
   const next = groups.map((group) => ({ ...group, hooks: group.hooks.filter((hook) => {
-    if (hook.command === command) { removed = true; return false; }
+    if (hook.command && drop(hook.command)) { removed = true; return false; }
     return true;
   }) })).filter((group) => group.hooks.length > 0);
   if (!removed) return false;
@@ -57,17 +57,23 @@ export function removeStopFailureHook(configDir: string, command: string): boole
 
 /** Removes every AgentShift hook, whichever profile or extension version installed it. */
 export function removeAgentShiftHooks(configDir: string): boolean {
-  const file = join(configDir, 'settings.json');
-  const settings = readSettings(file);
-  const groups = settings.hooks?.StopFailure;
-  if (!Array.isArray(groups)) return false;
-  let removed = false;
-  const next = groups.map((group) => ({ ...group, hooks: group.hooks.filter((hook) => {
-    if (hook.command?.endsWith(HOOK_MARKER)) { removed = true; return false; }
-    return true;
-  }) })).filter((group) => group.hooks.length > 0);
-  if (!removed) return false;
-  settings.hooks!.StopFailure = next;
-  writeSettings(file, settings);
-  return true;
+  return removeHooks(configDir, (command) => command.endsWith(HOOK_MARKER));
+}
+
+/** Swaps out AgentShift hooks of this signal dir that are not `command` (an older extension version); never installs where none existed. */
+export function replaceStaleHooks(configDir: string, command: string, signalDir: string): boolean {
+  const mine = JSON.stringify(signalDir);
+  const removed = removeHooks(configDir, (existing) => existing.endsWith(HOOK_MARKER) && existing.includes(mine) && existing !== command);
+  if (removed) installStopFailureHook(configDir, command);
+  return removed;
+}
+
+/** Copies the hook script to a stable path that survives extension updates; the rename keeps concurrent windows safe. */
+export function installHookScript(source: string, storageDir: string): string {
+  mkdirSync(storageDir, { recursive: true });
+  const target = join(storageDir, 'stop-failure.js');
+  const tmp = join(storageDir, `stop-failure.js.${process.pid}.tmp`);
+  copyFileSync(source, tmp);
+  renameSync(tmp, target);
+  return target;
 }

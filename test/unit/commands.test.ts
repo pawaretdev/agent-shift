@@ -23,7 +23,7 @@ function controller() {
     subscriptions: [],
   };
   const status = { update: vi.fn() };
-  const ctl = new CommandController(context as never, store, 'personal', false, status as never, {} as never);
+  const ctl = new CommandController(context as never, store, 'personal', status as never, {} as never);
   return { ctl, status };
 }
 
@@ -59,6 +59,9 @@ describe('CommandController.switchTo', () => {
     vscode.reloadBehavior = 'always';
     const { ctl } = controller();
     await ctl.switchTo('work');
+    // The restart is deferred until the command that asked for it has returned.
+    expect(vscode.executeCommand).not.toHaveBeenCalled();
+    await new Promise((resolve) => setTimeout(resolve, 0));
     expect(vscode.executeCommand).toHaveBeenCalledWith('workbench.action.restartExtensionHost');
   });
 });

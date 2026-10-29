@@ -6,7 +6,7 @@ export function parseLimitSignal(input: unknown): LimitSignal | undefined {
   // UNDOCUMENTED: Subscription caps are assumed to reach StopFailure hooks as error "rate_limit".
   if (record.error !== 'rate_limit' || typeof record.last_assistant_message !== 'string') return undefined;
   const message = record.last_assistant_message;
-  if (/\b85%\b/i.test(message) || !/you(?:'|’)ve hit your .+ limit/i.test(message)) return undefined;
+  if (/\b85%/i.test(message) || !/you(?:'|’)ve hit your .+ limit/i.test(message)) return undefined;
   const lower = message.toLowerCase();
   const kind = lower.includes('opus') ? 'opus' : lower.includes('sonnet') ? 'sonnet' : lower.includes('weekly') ? 'weekly' : 'session';
   const reset = message.match(/resets?\s+([^\n·.]+)/i)?.[1]?.trim();

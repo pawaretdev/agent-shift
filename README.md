@@ -24,7 +24,7 @@ Managed profiles default to `~/.agent-shift/profiles`; metadata is stored in `~/
 
 ## Settings
 
-- `agentShift.profileRoot`: managed profile directory.
+- `agentShift.profileRoot`: managed profile directory. This and `agentShift.rules` are read only from user or remote-machine settings, never from a workspace.
 - `agentShift.reloadBehavior`: `ask`, `always`, or `never`.
 - `agentShift.rules`: ordered `{ "glob": "…", "profile": "…" }` workspace-path rules.
 - `agentShift.suggestSwitchOnLimit`: enable limit suggestions.

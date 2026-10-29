@@ -1,6 +1,5 @@
-import { copyFileSync, existsSync, mkdirSync, readdirSync, realpathSync, statSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
-import { createHash } from 'node:crypto';
 
 export interface HistorySession { id: string; file: string; profileId: string; mtimeMs: number }
 
@@ -57,10 +56,9 @@ export function copyHistorySession(source: string, targetConfigDir: string, cwd:
   const before = statSync(source);
   copyFileSync(source, target, 0);
   const after = statSync(source);
-  if (before.size !== after.size || before.mtimeMs !== after.mtimeMs) throw new Error('Source transcript changed during copy');
+  if (before.size !== after.size || before.mtimeMs !== after.mtimeMs) {
+    rmSync(target, { force: true });
+    throw new Error('Source transcript changed during copy');
+  }
   return { target, copied: true };
-}
-
-export function historyDisclosureKey(source: string): string {
-  return createHash('sha256').update(resolve(source)).digest('hex').slice(0, 12);
 }

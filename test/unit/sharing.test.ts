@@ -1,8 +1,8 @@
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { shareProfileData, unshareProfileData } from '../../src/core/sharing';
+import { shareProfileData, unshareProfileData, withLock } from '../../src/core/sharing';
 import { installStopFailureHook, removeAgentShiftHooks } from '../../src/claude/hookInstaller';
 
 function setup() {
@@ -80,5 +80,27 @@ describe('profile data sharing', () => {
     renameSync(join(profile, 'projects'), join(elsewhere, 'projects'));
     require('node:fs').symlinkSync(join(elsewhere, 'projects'), join(profile, 'projects'));
     expect(shareProfileData(profile, shared, 1).skipped).toEqual(['projects']);
+  });
+
+  it('keeps the shared copy of a clashing file and backs up the profile copy', () => {
+    const { shared, profile } = setup();
+    writeFileSync(join(shared, 'projects', 'repo', 'x.jsonl'), 'shared\n');
+    writeFileSync(join(profile, 'projects', 'repo', 'x.jsonl'), 'profile\n');
+    const result = shareProfileData(profile, shared, 1);
+    expect(readFileSync(join(shared, 'projects', 'repo', 'x.jsonl'), 'utf8')).toBe('shared\n');
+    expect(readFileSync(join(result.backupDir!, 'projects', 'repo', 'x.jsonl'), 'utf8')).toBe('profile\n');
+  });
+
+  it('withLock skips while a fresh lock exists and takes over a stale one', () => {
+    const lock = join(mkdtempSync(join(tmpdir(), 'agent-shift-lock-')), 'sharing.lock');
+    mkdirSync(lock);
+    let ran = 0;
+    expect(withLock(lock, () => { ran++; })).toBe(false);
+    expect(ran).toBe(0);
+    const old = new Date(Date.now() - 10 * 60_000);
+    utimesSync(lock, old, old);
+    expect(withLock(lock, () => { ran++; })).toBe(true);
+    expect(ran).toBe(1);
+    expect(existsSync(lock)).toBe(false);
   });
 });
