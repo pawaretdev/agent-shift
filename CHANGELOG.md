@@ -2,6 +2,11 @@
 
 All notable changes to AgentShift are documented here.
 
+## 0.2.0 - 2026-10-30
+
+- Show each profile's current five-hour and weekly usage in the profile picker, and the active profile's five-hour usage in the status bar.
+- Add Profile no longer keeps a second profile for an account that is already signed in (Default included), and the picker marks existing profiles that share an account.
+
 ## 0.1.5 - 2026-10-29
 
 - Usage-limit hooks keep working after updates: the hook script lives in the extension's global storage, and hooks left by older versions are replaced on startup.
