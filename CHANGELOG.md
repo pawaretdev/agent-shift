@@ -2,7 +2,7 @@
 
 All notable changes to AgentShift are documented here.
 
-## Unreleased
+## 0.1.4 - 2026-10-29
 
 - Publish to the VS Code Marketplace as well as Open VSX.
 
