@@ -1,0 +1,73 @@
+name: Bug report
+description: Something in AgentShift does not work as expected.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please redact emails, organization names, and paths you do not want public.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Switch from profile A to B
+        2. Choose Restart
+        3. Run /status in the Claude Code panel
+    validations:
+      required: true
+  - type: dropdown
+    id: editor
+    attributes:
+      label: Editor
+      options: [Cursor, VS Code, Other]
+    validations:
+      required: true
+  - type: input
+    id: editor-version
+    attributes:
+      label: Editor version
+      description: Help → About.
+    validations:
+      required: true
+  - type: input
+    id: agentshift-version
+    attributes:
+      label: AgentShift version
+    validations:
+      required: true
+  - type: input
+    id: claude-version
+    attributes:
+      label: Claude Code version
+      description: Output of `claude --version`.
+    validations:
+      required: true
+  - type: dropdown
+    id: login
+    attributes:
+      label: How the affected profile signed in
+      options: [Browser (Claude.ai), Email, SSO, Console / API billing, Not signed in, Not sure]
+  - type: dropdown
+    id: data-sharing
+    attributes:
+      label: agentShift.dataSharing
+      options: [isolated (default), shared]
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: macOS 15, Windows 11, Ubuntu 24.04, WSL, Remote SSH…
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Output panel → AgentShift. Redact anything private.
+      render: text

@@ -61,6 +61,10 @@ npx @vscode/vsce package --no-dependencies --allow-star-activation
 
 Tests use temporary directories, fake homes, and fake Claude executables. They never invoke login or logout against a real Claude configuration.
 
+## Contributing
+
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, checks, and the project rules, and use the [bug report form](https://github.com/pawaretdev/agent-shift/issues/new?template=bug_report.yml) for bugs.
+
 ## Trademark
 
 Claude and Anthropic are trademarks of Anthropic PBC. AgentShift is an independent project and is not affiliated with, endorsed by, or sponsored by Anthropic.
