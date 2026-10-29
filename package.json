@@ -2,7 +2,7 @@
   "name": "agent-shift",
   "displayName": "Agent Shift: Claude Code Profiles",
   "description": "Switch isolated Claude Code profiles in Cursor.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "pawaretdev",
   "license": "MIT",
   "icon": "media/icon.png",
