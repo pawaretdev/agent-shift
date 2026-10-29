@@ -2,7 +2,7 @@
 
 All notable changes to AgentShift are documented here.
 
-## Unreleased
+## 0.1.5 - 2026-10-29
 
 - Usage-limit hooks keep working after updates: the hook script lives in the extension's global storage, and hooks left by older versions are replaced on startup.
 - `agentShift.profileRoot` and `agentShift.rules` can no longer be set from workspace settings, so a repository cannot point Claude Code at its own configuration.
