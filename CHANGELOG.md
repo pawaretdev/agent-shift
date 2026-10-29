@@ -2,6 +2,10 @@
 
 All notable changes to AgentShift are documented here.
 
+## Unreleased
+
+- Publish to the VS Code Marketplace as well as Open VSX.
+
 ## 0.1.3 - 2026-10-29
 
 - Rename the display name to AgentShift so it is easier to find; the extension ID `pawaretdev.agent-shift` and `agentShift.*` settings are unchanged.

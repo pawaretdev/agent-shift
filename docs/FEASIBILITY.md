@@ -22,7 +22,7 @@ Legend: **Documented** means covered by official Claude Code or VS Code document
 | Resume copied transcript | Copy one transcript into the active profile's corresponding project directory and run `claude --resume <id> --fork-session`. | Mixed | CLI flags are documented. Discovery of a newly copied transcript by session id is undocumented; failures remain non-destructive and are surfaced to the user. |
 | Limit detection | A Claude Code StopFailure hook reports `rate_limit`; documented limit-message wording is parsed for kind and reset time. | Mixed | Whether every subscription cap maps to `rate_limit` is undocumented. Ignore warnings and unknown messages. |
 | Cursor | Cursor implements the VS Code extension API and can host the Claude Code extension. | Undocumented for product-specific behavior | Use only VS Code APIs; tailor wording from `vscode.env.appName`; document best-effort support. |
-| Open VSX publishing | Tag-triggered CI runs `ovsx publish` with `OVSX_PAT`. | Documented | Cursor installs from Open VSX; no VS Marketplace publishing. |
+| Publishing | Tag-triggered CI runs `ovsx publish` with `OVSX_PAT`, then `vsce publish` with `VSCE_PAT` when that secret exists. | Documented | Cursor installs from Open VSX; VS Code installs from the Visual Studio Marketplace. Both get the same `.vsix`. |
 
 ## Claude Code panel injection decision
 

@@ -1,6 +1,6 @@
 # AgentShift Functional Specification
 
-AgentShift is a Cursor extension for managing separate Claude Code accounts and organizations as isolated `CLAUDE_CONFIG_DIR` profiles. The extension makes no network calls and collects no telemetry.
+AgentShift is a Cursor and VS Code extension for managing separate Claude Code accounts and organizations as isolated `CLAUDE_CONFIG_DIR` profiles. The extension makes no network calls and collects no telemetry.
 
 ## Functional requirements
 

@@ -1,6 +1,6 @@
 # AgentShift: Claude Code Profiles
 
-AgentShift is a small Cursor extension for switching between isolated Claude Code accounts and organizations. Each managed profile receives its own `CLAUDE_CONFIG_DIR`, so Claude settings, project data, transcripts, and authentication context remain separate.
+AgentShift is a small Cursor and VS Code extension for switching between isolated Claude Code accounts and organizations. Each managed profile receives its own `CLAUDE_CONFIG_DIR`, so Claude settings, project data, transcripts, and authentication context remain separate.
 
 ## Features
 

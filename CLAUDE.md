@@ -1,6 +1,6 @@
 # AgentShift
 
-Cursor/VS Code extension that switches Claude Code accounts by giving each profile its own `CLAUDE_CONFIG_DIR`. Published to Open VSX as `pawaretdev.agent-shift`. No runtime dependencies, no network, no telemetry.
+Cursor/VS Code extension that switches Claude Code accounts by giving each profile its own `CLAUDE_CONFIG_DIR`. Published as `pawaretdev.agent-shift` to Open VSX (Cursor) and the VS Code Marketplace; the tag-triggered Release workflow publishes to both. No runtime dependencies, no network, no telemetry.
 
 ## Commands
 
