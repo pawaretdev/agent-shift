@@ -2,6 +2,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { projectIdentity } from '../core/redact';
 import type { ProfileIdentity } from '../core/profiles';
+import { parseUsageReport, type ProfileUsage } from '../core/usage';
 
 const execFileAsync = promisify(execFile);
 
@@ -49,4 +50,28 @@ export async function logout(configDir: string, executable = 'claude'): Promise<
     // execFile embeds stderr in error.message; surface only the exit code.
     throw new Error(`claude auth logout failed (${String((error as { code?: unknown }).code)})`);
   }
+}
+
+export async function usageReport(configDir?: string, executable = 'claude'): Promise<ProfileUsage | undefined> {
+  let stdout: string;
+  try {
+    ({ stdout } = await execFileAsync(executable, [
+      '-p', '/usage',
+      '--output-format', 'stream-json',
+      '--verbose',
+      '--no-session-persistence',
+      '--setting-sources=',
+      '--strict-mcp-config',
+    ], {
+      env: profileEnv(configDir),
+      encoding: 'utf8',
+      maxBuffer: 1024 * 1024,
+      timeout: 20_000,
+    }));
+  } catch (error) {
+    // execFile embeds stderr in error.message; surface only the exit code.
+    throw new Error(`claude usage report failed (${String((error as { code?: unknown }).code)})`);
+  }
+  // UNDOCUMENTED: Claude CLI stream-json carries the experimental SDK usage_report shape at the top level.
+  return parseUsageReport(stdout);
 }

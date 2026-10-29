@@ -11,7 +11,8 @@ AgentShift is a small Cursor and VS Code extension for switching between isolate
 - Optionally share conversations, settings, skills, and plugins across every profile while logins stay separate (**AgentShift: Profile Data Sharing**).
 - Browse transcript names and modification times across profiles, then copy one conversation into the active profile and resume it as a fork.
 - Detect documented session and weekly limit messages through a profile-local StopFailure hook and suggest another signed-in profile.
-- No telemetry, network requests, runtime dependencies, or direct credential-store access.
+- Show current five-hour and weekly usage for each signed-in subscription profile.
+- No telemetry, direct network requests, runtime dependencies, or direct credential-store access.
 
 ## Setup
 
@@ -46,7 +47,7 @@ AgentShift activates on `*` because it must synchronously set the selected profi
 
 ## Undocumented dependencies
 
-The implementation isolates and marks seven observed or inferred behaviors: extension-host environment inheritance by Claude Code, an extension-host restart being enough for the Claude panel to adopt a new profile, optional identity fields in auth status JSON, discovery of a copied transcript, long workspace-path encoding, subscription caps reaching StopFailure as `rate_limit`, and Cursor-specific hosting compatibility. See [docs/FEASIBILITY.md](docs/FEASIBILITY.md) for the complete risk and mitigation table.
+The implementation isolates and marks eight observed or inferred behaviors: extension-host environment inheritance by Claude Code, an extension-host restart being enough for the Claude panel to adopt a new profile, optional identity fields in auth status JSON, discovery of a copied transcript, long workspace-path encoding, subscription caps reaching StopFailure as `rate_limit`, Cursor-specific hosting compatibility, and the experimental SDK usage report appearing in CLI stream JSON. See [docs/FEASIBILITY.md](docs/FEASIBILITY.md) for the complete risk and mitigation table.
 
 ## Development
 

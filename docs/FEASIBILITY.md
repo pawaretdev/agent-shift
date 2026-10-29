@@ -21,6 +21,7 @@ Legend: **Documented** means covered by official Claude Code or VS Code document
 | History location | `<config>/projects/<encoded-cwd>/<session>.jsonl`; workspace encoding replaces non-alphanumeric characters with `-`. | Mixed | The location and workspace scoping are documented. AgentShift never parses JSONL content. Long encoded directory names require an undocumented fallback scan. |
 | Resume copied transcript | Copy one transcript into the active profile's corresponding project directory and run `claude --resume <id> --fork-session`. | Mixed | CLI flags are documented. Discovery of a newly copied transcript by session id is undocumented; failures remain non-destructive and are surfaced to the user. |
 | Limit detection | A Claude Code StopFailure hook reports `rate_limit`; documented limit-message wording is parsed for kind and reset time. | Mixed | Whether every subscription cap maps to `rate_limit` is undocumented. Ignore warnings and unknown messages. |
+| Current usage | Run `claude -p /usage` and project session and weekly limits from its stream JSON usage report. | Mixed | The SDK usage report is documented as experimental, but its presence in CLI stream JSON is undocumented. Use a strict allow-list, cache briefly, and show nothing when rate limits are unavailable. |
 | Cursor | Cursor implements the VS Code extension API and can host the Claude Code extension. | Undocumented for product-specific behavior | Use only VS Code APIs; tailor wording from `vscode.env.appName`; document best-effort support. |
 | Publishing | Tag-triggered CI runs `ovsx publish` with `OVSX_PAT`, then `vsce publish` with `VSCE_PAT` when that secret exists. | Documented | Cursor installs from Open VSX; VS Code installs from the Visual Studio Marketplace. Both get the same `.vsix`. |
 
@@ -55,5 +56,6 @@ Every implementation reliance below must carry a one-line `// UNDOCUMENTED: ...`
 5. Subscription usage caps consistently reach StopFailure hooks as `error: "rate_limit"`.
 6. Cursor-specific Claude Code hosting and activation behavior matches VS Code closely enough for the same integration strategy.
 7. Restarting only the extension host (`workbench.action.restartExtensionHost`) is enough for the Claude Code panel to relaunch with the new `CLAUDE_CONFIG_DIR`; a full window reload is not required.
+8. Claude CLI `stream-json` output from `claude -p /usage` includes the experimental SDK `usage_report` shape at the top level.
 
 AgentShift deliberately does not rely on any undocumented Claude credential-store service name and never attempts to reproduce Claude Code's credential storage behavior.

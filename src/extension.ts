@@ -26,7 +26,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
     if (event.affectsConfiguration('agentShift.dataSharing')) controller.applyDataSharing(true);
   }));
-  context.subscriptions.push(log, status, watchLimitSignals(context, () => controller.state(), (id) => controller.switchTo(id)));
+  context.subscriptions.push(log, status, controller, watchLimitSignals(context, () => controller.state(), (id) => controller.switchTo(id)));
   void warnOnClaudeEnvironmentConflict();
   void refreshIdentities(store, controller, log);
   void offerDefaultHook(context, controller);
@@ -42,7 +42,9 @@ async function refreshIdentities(store: ProfileStore, controller: CommandControl
       log.error(error);
     }
   }
-  controller.refresh();
+  let defaultIdentity;
+  try { defaultIdentity = await authStatus(); } catch (error) { log.error(error); }
+  controller.refresh(defaultIdentity);
 }
 
 async function offerDefaultHook(context: vscode.ExtensionContext, controller: CommandController): Promise<void> {

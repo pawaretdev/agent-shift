@@ -22,6 +22,11 @@ export interface Profile {
 
 interface ProfileFile { version: 1; profiles: Profile[] }
 
+/** The same email in two organizations is two accounts with separate limits. */
+export function sameAccount(a?: ProfileIdentity, b?: ProfileIdentity): boolean {
+  return Boolean(a?.email && b?.email && a.email.toLowerCase() === b.email.toLowerCase() && a.orgId === b.orgId);
+}
+
 export class ProfileStore {
   readonly file: string;
 

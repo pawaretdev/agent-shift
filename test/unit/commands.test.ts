@@ -23,7 +23,7 @@ function controller() {
     subscriptions: [],
   };
   const status = { update: vi.fn() };
-  const ctl = new CommandController(context as never, store, 'personal', status as never, {} as never);
+  const ctl = new CommandController(context as never, store, 'personal', status as never, {} as never, async () => undefined);
   return { ctl, status };
 }
 
@@ -42,7 +42,7 @@ describe('CommandController.switchTo', () => {
   it('asks to restart extensions when switching away from the loaded profile', async () => {
     const { ctl, status } = controller();
     await ctl.switchTo('work');
-    expect(status.update).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'work' }), true, 'name');
+    expect(status.update).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'work' }), true, 'name', undefined);
     expect(vscode.showInformationMessage).toHaveBeenCalledTimes(1);
   });
 
@@ -50,7 +50,7 @@ describe('CommandController.switchTo', () => {
     const { ctl, status } = controller();
     await ctl.switchTo('work');
     await ctl.switchTo('personal');
-    expect(status.update).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'personal' }), false, 'name');
+    expect(status.update).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'personal' }), false, 'name', undefined);
     expect(vscode.showInformationMessage).toHaveBeenCalledTimes(1);
     expect(process.env.CLAUDE_CONFIG_DIR).toBe('/p/personal');
   });

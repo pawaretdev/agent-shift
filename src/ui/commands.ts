@@ -1,20 +1,24 @@
 import * as vscode from 'vscode';
 import { dirname, join } from 'node:path';
-import { ProfileStore, type Profile } from '../core/profiles';
+import { ProfileStore, sameAccount, type Profile, type ProfileIdentity } from '../core/profiles';
 import { DEFAULT_PROFILE_ID, defaultConfigDir } from '../core/paths';
 import { copyHistorySession, listHistory, uniqueSessions } from '../core/history';
 import { shareProfileData, unshareProfileData, withLock, type DataSharing } from '../core/sharing';
-import { authStatus, logout } from '../claude/cli';
+import { authStatus, logout, usageReport } from '../claude/cli';
 import { applyProcessEnvironment, updateTerminalEnvironment } from '../claude/envInjector';
 import { hookCommand, installStopFailureHook, removeAgentShiftHooks, replaceStaleHooks } from '../claude/hookInstaller';
-import { pickProfile } from './picker';
+import { pickProfile, type UsageSource } from './picker';
 import type { ProfileStatusBar } from './statusBar';
 import type { Log } from '../log';
+import type { ProfileUsage } from '../core/usage';
 
-export class CommandController {
+export class CommandController implements vscode.Disposable {
   private profiles: Profile[];
   private activeId: string;
   private pendingReload = false;
+  private defaultIdentity?: ProfileIdentity;
+  private readonly usage: UsageCache;
+  private readonly usageTimer: NodeJS.Timeout;
   /** The profile this window's Claude Code process was started with; only a reload changes it. */
   private readonly loadedId: string;
 
@@ -24,11 +28,16 @@ export class CommandController {
     initialId: string,
     private readonly status: ProfileStatusBar,
     private readonly log: Log,
+    usageProbe: (configDir?: string) => Promise<ProfileUsage | undefined> = usageReport,
   ) {
     this.profiles = store.list();
     this.activeId = initialId;
     this.loadedId = initialId;
+    this.usage = new UsageCache(async (configDir) => usageProbe(configDir === defaultConfigDir() ? undefined : configDir), (error) => this.log.error(error));
+    this.usageTimer = setInterval(() => void this.refreshActiveUsage(true), 10 * 60_000);
+    this.usageTimer.unref?.();
     this.render();
+    void this.refreshActiveUsage();
   }
 
   register(): void {
@@ -47,7 +56,8 @@ export class CommandController {
     return { profile: this.profiles.find((profile) => profile.id === this.activeId), profiles: this.profiles };
   }
 
-  refresh(): void {
+  refresh(defaultIdentity?: ProfileIdentity): void {
+    if (defaultIdentity) this.defaultIdentity = defaultIdentity;
     this.profiles = this.store.list();
     this.render();
   }
@@ -118,6 +128,7 @@ export class CommandController {
     // Switching back to the profile the window loaded with needs no reload.
     this.pendingReload = id !== this.loadedId;
     this.render();
+    void this.refreshActiveUsage(true);
     if (!this.pendingReload) return;
     const behavior = vscode.workspace.getConfiguration('agentShift').get<'ask' | 'always' | 'never'>('reloadBehavior', 'ask');
     // UNDOCUMENTED: restarting only the extension host is assumed enough for the Claude Code panel to relaunch with the new CLAUDE_CONFIG_DIR.
@@ -129,7 +140,7 @@ export class CommandController {
   }
 
   private async chooseProfile(): Promise<void> {
-    const choice = await pickProfile(this.profiles, this.activeId);
+    const choice = await pickProfile(this.profiles, this.activeId, this.usage, this.defaultIdentity);
     if (!choice) return;
     if (choice === 'add') return this.addProfile();
     if (choice === 'manage') return this.manageProfiles();
@@ -182,6 +193,18 @@ export class CommandController {
           void vscode.window.showWarningMessage(`Login for ${profile.label} did not complete; the profile was removed.`);
           return;
         }
+        this.defaultIdentity = await authStatus();
+        const twin = [{ label: 'Default', identity: this.defaultIdentity }, ...this.profiles.filter((other) => other.id !== profile.id)]
+          .find((other) => sameAccount(other.identity, identity));
+        if (twin) {
+          // Same account means the same limits, so a second profile only adds a needless reload.
+          await logout(profile.dir);
+          this.store.deleteManagedDirectory(profile);
+          this.profiles = this.store.list();
+          this.render();
+          void vscode.window.showWarningMessage(`${identity.email} is already signed in as ${twin.label}; ${profile.label} was removed. Switch to ${twin.label} instead.`);
+          return;
+        }
         this.store.updateIdentity(profile.id, identity);
         this.profiles = this.store.list();
         this.render();
@@ -206,7 +229,7 @@ export class CommandController {
 
   private async setWorkspaceDefault(): Promise<void> {
     if (!this.assertTrusted()) return;
-    const choice = await pickProfile(this.profiles, this.activeId, false);
+    const choice = await pickProfile(this.profiles, this.activeId, this.usage, this.defaultIdentity, false);
     if (!choice) return;
     const id = choice === 'default' ? DEFAULT_PROFILE_ID : (typeof choice === 'object' ? choice.id : DEFAULT_PROFILE_ID);
     await this.context.workspaceState.update('workspaceDefault', id);
@@ -272,8 +295,17 @@ export class CommandController {
   }
 
   private render(): void {
-    this.status.update(this.profiles.find((profile) => profile.id === this.activeId), this.pendingReload, vscode.workspace.getConfiguration('agentShift').get('statusBarStyle', 'name'));
+    const profile = this.profiles.find((candidate) => candidate.id === this.activeId);
+    this.status.update(profile, this.pendingReload, vscode.workspace.getConfiguration('agentShift').get('statusBarStyle', 'name'), this.usage.get(profile?.dir ?? defaultConfigDir()));
   }
+
+  private async refreshActiveUsage(force = false): Promise<void> {
+    const dir = this.profiles.find((profile) => profile.id === this.activeId)?.dir ?? defaultConfigDir();
+    await this.usage.refresh(dir, force);
+    this.render();
+  }
+
+  dispose(): void { clearInterval(this.usageTimer); }
 }
 
 /** Restarts after the running command returns; a restart while it is still running is reported as "Canceled". */
@@ -283,4 +315,37 @@ function restartExtensionHost(): void {
 
 function dataSharing(): DataSharing {
   return vscode.workspace.getConfiguration('agentShift').get<DataSharing>('dataSharing', 'isolated');
+}
+
+class UsageCache implements UsageSource {
+  private readonly cache = new Map<string, { usage?: ProfileUsage; checkedAt: number }>();
+  private readonly inFlight = new Map<string, Promise<ProfileUsage | undefined>>();
+
+  constructor(
+    private readonly probe: (configDir: string) => Promise<ProfileUsage | undefined>,
+    private readonly onError: (error: unknown) => void,
+  ) {}
+
+  get(configDir: string): ProfileUsage | undefined { return this.cache.get(configDir)?.usage; }
+
+  isStale(configDir: string): boolean {
+    return Date.now() - (this.cache.get(configDir)?.checkedAt ?? 0) >= 2 * 60_000;
+  }
+
+  refresh(configDir: string, force = false): Promise<ProfileUsage | undefined> {
+    if (!force && !this.isStale(configDir)) return Promise.resolve(this.get(configDir));
+    const running = this.inFlight.get(configDir);
+    if (running) return running;
+    const previous = this.get(configDir);
+    const promise = this.probe(configDir).then((usage) => {
+      this.cache.set(configDir, { usage, checkedAt: Date.now() });
+      return usage;
+    }, (error) => {
+      this.onError(error);
+      this.cache.set(configDir, { usage: previous, checkedAt: Date.now() });
+      return previous;
+    }).finally(() => this.inFlight.delete(configDir));
+    this.inFlight.set(configDir, promise);
+    return promise;
+  }
 }
